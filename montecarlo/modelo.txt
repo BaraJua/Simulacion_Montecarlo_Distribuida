@@ -1,0 +1,10 @@
+{
+    "model": "resultado = y * b + c",
+    "variables": {
+        "y": ["uniforme", -20, 10],
+        "b": ["normal", 5, 2],
+        "c": ["constante", 3],
+        "a": ["uniforme", 0, 200]
+    },
+    "constants": {}
+}

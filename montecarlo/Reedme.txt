@@ -1,0 +1,187 @@
+Simulación Montecarlo Distribuida
+Autor: Krasny (Bara)
+
+
+------------------------------------------------------------
+DESCRIPCIÓN GENERAL
+------------------------------------------------------------
+
+Este proyecto implementa un sistema distribuido de simulación Montecarlo, diseñado bajo el modelo de paso de mensajes, utilizando RabbitMQ como bróker de comunicación.
+
+El objetivo del sistema es ejecutar simulaciones de forma paralela en múltiples nodos (consumidores), permitiendo una evaluación eficiente de modelos estadísticos o matemáticos definidos por el usuario.
+
+Cada componente del sistema está implementado de forma independiente, siguiendo el paradigma orientado a objetos, y puede ejecutarse en equipos o máquinas virtuales distintas.
+
+
+------------------------------------------------------------
+ARQUITECTURA GENERAL DEL SISTEMA
+------------------------------------------------------------
+
+El sistema se compone de cuatro módulos principales, que se comunican mediante colas en RabbitMQ:
+
+Productor  ->  RabbitMQ Broker  ->  Consumidores (VM1, VM2, etc.)  ->  Recolector  ->  Dashboard
+
+Cada componente cumple una función específica dentro del flujo general:
+- Productor: genera escenarios a partir de un modelo base.
+- Consumidores: ejecutan el modelo y calculan los resultados.
+- Recolector: reúne los resultados y los reenvía.
+- Dashboard: muestra el estado general en tiempo real.
+
+
+------------------------------------------------------------
+COMPONENTES PRINCIPALES
+------------------------------------------------------------
+
+Productor: productor/productor.py
+  Lee el archivo modelo.txt, genera escenarios y los publica en RabbitMQ.
+
+Consumidor: consumidor/consumidor.py
+  Obtiene el modelo, ejecuta los escenarios y publica los resultados.
+
+Recolector: colector/colector.py
+  Recoge resultados, los almacena en archivos de texto y los reenvía al dashboard.
+
+Dashboard: dashboard/dashboard.py
+  Visualiza los resultados y estadísticas en tiempo real en una interfaz tipo terminal.
+
+
+------------------------------------------------------------
+REQUISITOS DEL ENTORNO
+------------------------------------------------------------
+
+Sistema operativo recomendado:
+- Ubuntu 22.04 / Debian 12 / Windows 10 o superior
+- RabbitMQ instalado y corriendo en una máquina accesible por red local.
+
+Dependencias de Python:
+  pika
+  numpy
+  pygame
+
+Instalación de dependencias:
+  pip install pika numpy pygame
+
+Versión recomendada de Python: 3.10 o superior.
+
+
+------------------------------------------------------------
+ESTRUCTURA DEL PROYECTO
+------------------------------------------------------------
+
+montecarlo/
+│
+├── productor/
+│   └── productor.py
+│
+├── consumidor/
+│   └── consumidor.py
+│
+├── colector/
+│   └── colector.py
+│
+├── dashboard/
+│   └── dashboard.py
+│
+├── resultados/
+│   └── (resultados individuales por consumidor)
+│
+└── resultados_dashboard/
+    └── resultados_dashboard.txt
+
+
+------------------------------------------------------------
+FORMATO DEL ARCHIVO MODELO.TXT
+------------------------------------------------------------
+
+El archivo modelo.txt define el modelo matemático y las variables aleatorias que se utilizarán para generar los escenarios.
+Debe colocarse en la carpeta del Productor, con el siguiente formato:
+
+model: resultado = A + B * C
+
+constants:
+    A = 5
+
+distributions:
+    B ~ uniform(0, 10)
+    C ~ normal(5, 2)
+
+Explicación:
+- model: contiene la expresión a evaluar en cada escenario (debe asignar a resultado).
+- constants: define valores fijos disponibles para todos los escenarios.
+- distributions: define las variables aleatorias junto con su tipo de distribución y parámetros.
+
+Distribuciones soportadas:
+  uniform(a, b)       -> Genera valores uniformes entre a y b
+  normal(mu, sigma)   -> Genera valores según una distribución normal
+  triangular(a,b,c)   -> Genera valores triangulares entre los límites
+  constante(x)        -> Variable fija con valor constante
+
+
+------------------------------------------------------------
+EJECUCIÓN DEL SISTEMA
+------------------------------------------------------------
+
+Cada componente debe ejecutarse en una máquina o VM independiente.
+
+1. Productor
+   cd productor
+   python3 productor.py
+
+2. Consumidores (uno o varios)
+   cd consumidor
+   python3 consumidor.py
+   *Cada consumidor debe identificarse con un nombre único (ejemplo: VM1, LaptopA, etc.)
+
+3. Recolector
+   cd colector
+   python3 colector.py
+   *Guarda los resultados en la carpeta resultados/ y los reenvía al dashboard.
+
+4. Dashboard
+   cd dashboard
+   python3 dashboard.py
+   *Visualiza en tiempo real la actividad de los consumidores y el promedio global.
+
+
+------------------------------------------------------------
+SALIDA DE RESULTADOS
+------------------------------------------------------------
+
+Recolector:
+  Guarda los resultados numéricos individuales en
+  resultados/resultados_YYYYMMDD_HHMMSS.txt
+
+Dashboard:
+  Mantiene un registro consolidado en
+  resultados_dashboard/resultados_dashboard.txt
+
+Formato de salida:
+  [HH:MM:SS] <nombre_consumidor> -> Escenario: {...} => Resultado: <valor>
+
+
+------------------------------------------------------------
+MIDDLEWARE Y MODELO DE COMUNICACIÓN
+------------------------------------------------------------
+
+Este sistema utiliza RabbitMQ como bróker de mensajes, que no actúa como middleware en sentido estricto, sino como un intermediario de comunicación asíncrona basado en colas.
+
+El modelo de paso de mensajes se implementa directamente sobre las colas:
+  model_queue
+  scenario_queue
+  result_queue
+  dashboard_queue
+
+Esto garantiza independencia entre procesos, asincronía y tolerancia a fallos.
+
+
+------------------------------------------------------------
+CRÉDITOS
+------------------------------------------------------------
+
+Desarrollado por: Krasny (Bara)
+
+------------------------------------------------------------
+ENLACE AL DOCUMENTO ACADÉMICO
+------------------------------------------------------------
+------------------------------------------------------------
+© 2025 – Proyecto académico para uso educativo.
